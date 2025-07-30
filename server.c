@@ -17,31 +17,60 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
-    // clear the server memory and set the server_addr = 0
+    // CLEAR THE MEMORY
     memset(&server_addr, 0, sizeof(server_addr));
 
-    // set up the server address
+    // SET UP THE SERVER ADDRESS
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
-    // Bind the socket to this address
-
-    if(bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+    // BIND THE SOCKET TO THIS ADDRESS
+    if (bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("Bind Failed");
         exit(EXIT_FAILURE);
 
     }
                                          
- 
-
-    if(listen(server_fd, 5) < 0){
+    // LISTEN
+    if (listen(server_fd, 5) < 0){
         perror("Listen Failed");
         exit(EXIT_FAILURE);
 
     }
 
-    printf("Server is listening on port %d...\n", PORT);
+    struct sockaddr_in client_addr;
+    socklen_t addr_len = sizeof(client_addr);
 
+    int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addr_len);
+    if (client_fd < 0) {
+        perror("Accept Failed");
+        exit(EXIT_FAILURE);
+
+    }
+
+    printf("Client connected\n");
+
+
+    char buffer[1024] = {0};
+    while(1) {
+        memset(buffer, 0, sizeof(buffer));
+        int bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (bytes_received <= 0) {
+            break;
+        }
+        if (strncmp(buffer, "exit", 4) == 0) {
+            printf("Client exited\n");
+            break;
+        }
+
+        printf("Client says: %s\n", buffer);
+
+    }
+
+    printf("Server is listening on port %d...\n", PORT);
+    
+
+    sleep(90);
     return 0;
 }
