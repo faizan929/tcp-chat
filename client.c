@@ -39,22 +39,32 @@ int main(){
     printf("Connected to server\n");
     
 
-  
+    char buffer[1024];
     while(1) {
-        char buffer[1024];
         printf("Enter message: ");
         fgets(buffer, sizeof(buffer), stdin);
+        send(socket_fd, buffer, strlen(buffer), 0);
 
         //EXIT CONDITION
         if(strncmp(buffer, "exit", 4) == 0){
+            printf("Exiting....");
             break;
         }
 
-        send(socket_fd, buffer, strlen(buffer), 0);
+        //RECEIVE FROM THE SERVER
+        memset(buffer, sizeof(buffer), 0);
+        int bytes_received = recv(socket_fd, buffer, sizeof(buffer), 0);
+        if (bytes_received <= 0){
+            break;
+        }
+        printf("Server says:\n%s", buffer);
+
+        if (strncmp(buffer, "exit", 4) == 0){
+            printf("Server ended the chat.\n");
+            break;
+        }
 
     }
-
-
     close(socket_fd);
 
 } 

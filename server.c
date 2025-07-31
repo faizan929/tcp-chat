@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>  // for close()
-#include <sys/socket.h> // for socket, bind, list 
-#include <netinet/in.h>  // for sockaddr_in, htons
+#include <unistd.h>  // close()
+#include <sys/socket.h> // socket(), bind(), listen(), accept() 
+#include <netinet/in.h>  // sockaddr_in, htons
 
 #define PORT 9002
 
 int main(){
+    // CREATE A SERVER FILE DESCRIPTOR
     int server_fd;
     struct sockaddr_in server_addr;
 
@@ -42,6 +43,7 @@ int main(){
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
 
+    //CLIENT FILE DESCRIPTOR
     int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addr_len);
     if (client_fd < 0) {
         perror("Accept Failed");
@@ -59,18 +61,26 @@ int main(){
         if (bytes_received <= 0) {
             break;
         }
+
         if (strncmp(buffer, "exit", 4) == 0) {
             printf("Client exited\n");
             break;
         }
+        printf("Client says:\n%s", buffer);
 
-        printf("Client says: %s\n", buffer);
-
+        printf("Server reply:\n");
+        fgets(buffer, sizeof(buffer), stdin);
+        //SEND NOW TO CLIENT FILE DESCRIPTOR
+        send(client_fd, buffer, strlen(buffer), 0); 
+        
+        if (strncmp(buffer, "exit", 4) == 0){
+            printf("Server is exiting...");
+            break;
+        }
     }
 
-    printf("Server is listening on port %d...\n", PORT);
-    
-
-    sleep(90);
+    close(client_fd);
+    close(server_fd);
     return 0;
 }
+
